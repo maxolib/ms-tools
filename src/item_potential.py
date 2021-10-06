@@ -29,18 +29,18 @@ class ItemPotential():
 				if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
 					break
 
-	def lookingPotential(self, targetDict: dict):
-		count:int = 0
+	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0):
 		time.sleep(3)
 
 		with mss() as sct:
 			while True:
 				img, text = self.getText(sct)
 
-				cv2.imshow('test', img)
-				if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
-					break
-				if("®" not in text and "Legen" not in text):
+				if showDebug:
+					cv2.imshow('test', img)
+					cv2.waitKey(1)
+
+				if("Legen" not in text and "Unique" not in text ):
 					continue
 
 				os.system('cls' if os.name == 'nt' else 'clear')
@@ -52,25 +52,26 @@ class ItemPotential():
 					print("{target}: {amount}/{min_amount}".format(target= target, amount = amount, min_amount = min_amount))
 					if amount >= min_amount:
 						print("-------------------------------------------------------")
-						print("count: {count} ({nx:,} NX)".format(count = count, nx = count * 1200))
+						print("count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200))
 						print("Success !!")
 						return
 				print("-------------------------------------------------------")
-				print("count: {count} ({nx:,} NX)".format(count = count, nx = count * 1200))
+				print("count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200))
 				print("-------------------------------------------------------")
 				self.trigger()
 				count = count + 1
 	
 	def trigger(self):
-		# pyautogui.press("enter")
+		# time.sleep(.2)
+		pyautogui.press("enter")
 		# pyautogui.press(["enter", "enter"])
 		# pyautogui.click()
 		# mouse.click(Button.left, 2)
 		# mouse.press(Button.left)
 		# mouse.release(Button.left)	
-		pyautogui.keyDown(self.key)
-		time.sleep(.2)
-		pyautogui.keyUp(self.key)
+		# pyautogui.keyDown(self.key)
+		# time.sleep(.2)
+		# pyautogui.keyUp(self.key)
 
 		
 
