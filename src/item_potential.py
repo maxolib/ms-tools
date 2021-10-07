@@ -17,6 +17,7 @@ class ItemPotential():
 		self.key: str = key
 
 	def lookingPotential(self, targetDict: dict, useCalibrate: bool = True, max_count = -1):
+		count = 0
 		time.sleep(3)
 		with mss() as sct:
 			# calibrate
