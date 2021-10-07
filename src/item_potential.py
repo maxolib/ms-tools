@@ -4,27 +4,24 @@ from mss import mss
 from PIL import Image
 import pytesseract
 import os
-import math
 import pyautogui
 import time
-from pynput.mouse import Button, Controller
-
 import re
-NORMAL_POTENTIAL_REX = r"[ ]*\((?P<rarity>.+)\)[ ]*(?P<value>.+)"
 
+NORMAL_POTENTIAL_REX = r"[ ]*\((?P<rarity>.+)\)[ ]*(?P<value>.+)"
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-mouse = Controller()
 
 class ItemPotential():
 	def __init__(self, crop: dict, key: str = "enter"):
 		self.crop: dict = crop
 		self.key: str = key
 
-	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0, isCalibrate: bool = True):
+	def lookingPotential(self, targetDict: dict, useCalibrate: bool = True, max_count = -1):
 		time.sleep(3)
 		with mss() as sct:
 			# calibrate
-			self.calibrate(sct)
+			if(useCalibrate):
+				self.calibrate(sct)
 
 			# countdown
 			self.countdown(3)
@@ -33,9 +30,8 @@ class ItemPotential():
 			while True:
 				img, text = self.getText(sct)
 
-				if showDebug:
-					cv2.imshow('test', img)
-					cv2.waitKey(1)
+				cv2.imshow('test', img)
+				cv2.waitKey(1)
 
 				if("Legen" not in text and "Unique" not in text):
 					continue
@@ -69,13 +65,19 @@ class ItemPotential():
 				self.logText(result)
 				self.trigger()
 				count = count + 1
+				if max_count > 0 and count > max_count:
+					retry = input("limit exceeded!!! press 'Y' to continue and reset count:")
+					if retry.lower() != "y":
+						count = 0
+						return
+					
 	
 	def calibrate(self, sct):
 		# calibrate
 		while True:
 			img, text = self.getText(sct)
 			os.system('cls' if os.name == 'nt' else 'clear')
-			self.logText(text)
+			self.getPotentials(text)
 			print("Calibration")
 			print("Press any key to continue...")
 			cv2.imshow('test', img)
@@ -130,18 +132,3 @@ class ItemPotential():
 				potentials.append(dict(rarity=rarity, value=value))
 		print("-------------------------------------------------------")
 		return potentials
-
-	def matchPotentials(self, target_list: list, potentials: list) -> bool:
-		for target in target_list:
-			print("-------------------------")
-			score = 0
-			total_score = 0
-			for key, value in target.items():
-				names = re.split(', |,', key)
-				for name in names:
-					count = 0
-					need_percent = '%' in name
-					name = name.replace('%', '')
-
-					total_score = total_score
-					print(name, value, need_percent)
