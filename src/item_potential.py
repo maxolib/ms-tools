@@ -9,6 +9,9 @@ import pyautogui
 import time
 from pynput.mouse import Button, Controller
 
+import re
+NORMAL_POTENTIAL_REX = r"[ ]*\((?P<rarity>.+)\)[ ]*(?P<name>.+)[ ]*:[ ]*(?P<value>.+)[ ]*"
+
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 mouse = Controller()
 
@@ -28,11 +31,12 @@ class ItemPotential():
 	# 			if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
 	# 				break
 
-	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0):
+	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0, isCalibrate: bool = True):
 		time.sleep(3)
 		with mss() as sct:
 			# calibrate
-			self.calibrate(sct)
+			if isCalibrate:
+				self.calibrate(sct)
 
 			# countdown
 			self.countdown(3)
@@ -58,8 +62,12 @@ class ItemPotential():
 					if amount >= min_amount:
 						self.logText(result)
 						print("Success !!")
-						return
-
+						retry = input("manual re-potential one time then type 'Y' to continue:")
+						if retry.lower() != "y":
+							return
+						else:
+							self.countdown(3)
+							break
 				self.logText(result)
 				self.trigger()
 				count = count + 1
@@ -78,7 +86,7 @@ class ItemPotential():
 	
 	def countdown(self, seconds: int = 3):
 		os.system('cls' if os.name == 'nt' else 'clear')
-		print("Auto-cube will start in 3 seconds")
+		print("Auto-cube will start in 3 seconds, Please focus the MapleStory window.")
 		while seconds >= 0:
 			print(seconds)
 			time.sleep(1)
@@ -109,3 +117,32 @@ class ItemPotential():
 		print("-------------------------------------------------------")
 		print(text)
 		print("-------------------------------------------------------")
+
+	def getPotentials(self, text: str) -> list: 
+		lines = text.splitlines()
+		
+		potentials = []
+		for line in lines:
+			matches = re.search(NORMAL_POTENTIAL_REX, line)
+			if matches:
+				rarity = matches["rarity"]
+				name = matches["name"]
+				value = matches["value"]
+				print("#{}#, #{}#, #{}#".format(matches['rarity'], matches['name'], matches['value']))
+				potentials.append(dict(key=name, value=value))
+		print(potentials)
+
+	def matchPotentials(self, target_list: list, potentials: list) -> bool:
+		for target in target_list:
+			print("-------------------------")
+			score = 0
+			total_score = 0
+			for key, value in target.items():
+				names = re.split(', |,', key)
+				for name in names:
+					count = 0
+					need_percent = '%' in name
+					name = name.replace('%', '')
+
+					total_score = total_score
+					print(name, value, need_percent)
