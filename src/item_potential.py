@@ -10,7 +10,7 @@ import time
 from pynput.mouse import Button, Controller
 
 import re
-NORMAL_POTENTIAL_REX = r"[ ]*\((?P<rarity>.+)\)[ ]*(?P<name>.+)[ ]*:[ ]*(?P<value>.+)[ ]*"
+NORMAL_POTENTIAL_REX = r"[ ]*\((?P<rarity>.+)\)[ ]*(?P<value>.+)"
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 mouse = Controller()
@@ -20,23 +20,11 @@ class ItemPotential():
 		self.crop: dict = crop
 		self.key: str = key
 
-	# def CheckCrop(self):
-	# 	with mss() as sct:
-	# 		while True:
-	# 			img, text = self.getText(sct)
-	# 			os.system('cls' if os.name == 'nt' else 'clear')
-	# 			print(text)
-
-	# 			cv2.imshow('test', img)
-	# 			if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
-	# 				break
-
 	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0, isCalibrate: bool = True):
 		time.sleep(3)
 		with mss() as sct:
 			# calibrate
-			if isCalibrate:
-				self.calibrate(sct)
+			self.calibrate(sct)
 
 			# countdown
 			self.countdown(3)
@@ -49,16 +37,26 @@ class ItemPotential():
 					cv2.imshow('test', img)
 					cv2.waitKey(1)
 
-				if("Legen" not in text and "Unique" not in text ):
+				if("Legen" not in text and "Unique" not in text):
 					continue
 
 				os.system('cls' if os.name == 'nt' else 'clear')
-				self.logText(text)
+				# self.logText(text)
+				potentials = self.getPotentials(text)
 				result = "count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200)
 
 				for target, min_amount in targetDict.items():
-					amount = text.count(target)
-					print("{target}: {amount}/{min_amount}".format(target= target, amount = amount, min_amount = min_amount))
+					target_list = re.split(', |,', target)
+					amount = 0
+					for potential in potentials:
+						have_all_word = all(ele in potential['value'] for ele in target_list)
+						check_start_word = potential['value'].startswith(target_list[0])
+
+						if have_all_word and check_start_word:
+							amount = amount + 1
+
+					print("{}: {}/{}".format(target_list[0], amount, min_amount))
+
 					if amount >= min_amount:
 						self.logText(result)
 						print("Success !!")
@@ -122,15 +120,16 @@ class ItemPotential():
 		lines = text.splitlines()
 		
 		potentials = []
+		print("-------------------------------------------------------")
 		for line in lines:
 			matches = re.search(NORMAL_POTENTIAL_REX, line)
 			if matches:
 				rarity = matches["rarity"]
-				name = matches["name"]
 				value = matches["value"]
-				print("#{}#, #{}#, #{}#".format(matches['rarity'], matches['name'], matches['value']))
-				potentials.append(dict(key=name, value=value))
-		print(potentials)
+				print("({}) - {}".format(matches['rarity'], matches['value']))
+				potentials.append(dict(rarity=rarity, value=value))
+		print("-------------------------------------------------------")
+		return potentials
 
 	def matchPotentials(self, target_list: list, potentials: list) -> bool:
 		for target in target_list:

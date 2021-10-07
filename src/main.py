@@ -2,11 +2,11 @@ from item_potential import ItemPotential
 
 crop = {'left': 300, 'top': 350, 'width': 350, 'height': 150}
 
-lookingDict = {
-	"Item Drop Rate": 2,
-	"LUK": 2,
-	"All Stats": 2
+target_potential_list = {
+	"Item Drop Rate, %": 2,
+	"ATT, %": 3,
+	"All Stats, %": 3
 }
 
 itemPotential = ItemPotential(crop=crop)
-itemPotential.lookingPotential(lookingDict)
+itemPotential.lookingPotential(target_potential_list)
