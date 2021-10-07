@@ -24,17 +24,15 @@
 	itemPotential = ItemPotential(crop=crop, lines=lines)
 	itemPotential.CheckCrop()
 	```
-2. looking some potential
+2. find potential
+	1. set `targetPotentialDict`
 	``` python
-	from item_potential import ItemPotential
-
 	lookingDict = {
 		"Item Drop Rate": 2,
 		"ATT": 2,
 		"LUK": 2,
 		"All Stats": 2
 	}
-
-	itemPotential = ItemPotential(crop=crop, lines=lines)
-	itemPotential.lookingPotential(lookingDict)
 	```
+	2. move maple window for calibrating then click anykey in preview window
+	3. click at maple window and wait 3 seconds

@@ -13,26 +13,31 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 mouse = Controller()
 
 class ItemPotential():
-	def __init__(self, crop: dict, lines: list, key: str = "enter"):
+	def __init__(self, crop: dict, key: str = "enter"):
 		self.crop: dict = crop
-		self.lines: list = lines
 		self.key: str = key
 
-	def CheckCrop(self):
-		with mss() as sct:
-			while True:
-				img, text = self.getText(sct)
-				os.system('cls' if os.name == 'nt' else 'clear')
-				print(text)
+	# def CheckCrop(self):
+	# 	with mss() as sct:
+	# 		while True:
+	# 			img, text = self.getText(sct)
+	# 			os.system('cls' if os.name == 'nt' else 'clear')
+	# 			print(text)
 
-				cv2.imshow('test', img)
-				if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
-					break
+	# 			cv2.imshow('test', img)
+	# 			if cv2.waitKey(33) & 0xFF in (ord('q'), 27, ):
+	# 				break
 
 	def lookingPotential(self, targetDict: dict, showDebug: bool = True, count: int = 0):
 		time.sleep(3)
-
 		with mss() as sct:
+			# calibrate
+			self.calibrate(sct)
+
+			# countdown
+			self.countdown(3)
+
+			# start
 			while True:
 				img, text = self.getText(sct)
 
@@ -44,51 +49,63 @@ class ItemPotential():
 					continue
 
 				os.system('cls' if os.name == 'nt' else 'clear')
-				print("-------------------------------------------------------")
-				print(text)
-				print("-------------------------------------------------------")
+				self.logText(text)
+				result = "count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200)
+
 				for target, min_amount in targetDict.items():
 					amount = text.count(target)
 					print("{target}: {amount}/{min_amount}".format(target= target, amount = amount, min_amount = min_amount))
 					if amount >= min_amount:
-						print("-------------------------------------------------------")
-						print("count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200))
+						self.logText(result)
 						print("Success !!")
 						return
-				print("-------------------------------------------------------")
-				print("count: {count:,} ({nx:,} NX)".format(count = count, nx = count * 1200))
-				print("-------------------------------------------------------")
+
+				self.logText(result)
 				self.trigger()
 				count = count + 1
 	
-	def trigger(self):
-		# time.sleep(.2)
-		pyautogui.press("enter")
-		# pyautogui.press(["enter", "enter"])
-		# pyautogui.click()
-		# mouse.click(Button.left, 2)
-		# mouse.press(Button.left)
-		# mouse.release(Button.left)	
-		# pyautogui.keyDown(self.key)
-		# time.sleep(.2)
-		# pyautogui.keyUp(self.key)
+	def calibrate(self, sct):
+		# calibrate
+		while True:
+			img, text = self.getText(sct)
+			os.system('cls' if os.name == 'nt' else 'clear')
+			self.logText(text)
+			print("Calibration")
+			print("Press any key to continue...")
+			cv2.imshow('test', img)
+			if cv2.waitKey(1) is not -1:
+				break
+	
+	def countdown(self, seconds: int = 3):
+		os.system('cls' if os.name == 'nt' else 'clear')
+		print("Auto-cube will start in 3 seconds")
+		while seconds >= 0:
+			print(seconds)
+			time.sleep(1)
+			seconds = seconds - 1
 
-		
+	def trigger(self):
+		pyautogui.press("enter")
 
 	def getText(self, sct):
 		screenShot = sct.grab(self.crop)
 		img = Image.frombytes('RGB', (screenShot.width, screenShot.height), screenShot.rgb, )
 		img = np.array(img)
-		img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 		img = cv2.bitwise_not(img)
 
-		for line in self.lines:
-			cv2.line(img, line["start"], line["end"], (255,255,255), 1)
-
 		img = cv2.resize(img, (350 * 2, 150 * 2))
+		ret, img = cv2.threshold(img, 77,255,cv2.THRESH_BINARY)
+		img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 		ret, img = cv2.threshold(img, 35,255,cv2.THRESH_BINARY)
-		# ret, img = cv2.threshold(img,127,255,cv2.THRESH_TRUNC)
-
+		kernel = np.ones((2,2), np.uint8)
+		img = cv2.dilate(img, kernel, iterations = 1)
+		
 		text = pytesseract.image_to_string(img)
 		text = os.linesep.join([s for s in text.splitlines() if s and s is not " " and s is not "  "])
 		return img, text
+	
+	def logText(self, text: str):
+		print("-------------------------------------------------------")
+		print(text)
+		print("-------------------------------------------------------")
