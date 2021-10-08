@@ -4,35 +4,26 @@
 	``` python
 	pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 	```
-	>> 
-3. install library requirements
+3. install Python v3.6 or newer
+3. install library
 	```
 	pip install -r requirements.txt
 	```
 
 # How to use
-1. calibration ROI and override lines below text
+1. set `target_potential_list` 
+	- `KEY` - keyword for searching each line (multi-key split by ",")
+	- `VALUE` - line amount
 	``` python
-	from item_potential import ItemPotential
-
-	crop = {'left': 500, 'top': 500, 'width': 350, 'height': 150}
-	lines = [ 
-		{ "start": (0, 58), "end": (2000, 58)},
-		{ "start": (0, 76), "end": (2000, 76)},
-		{ "start": (0, 94), "end": (2000, 94)},
-	]
-	itemPotential = ItemPotential(crop=crop, lines=lines)
-	itemPotential.CheckCrop()
-	```
-2. find potential
-	1. set `targetPotentialDict`
-	``` python
-	lookingDict = {
-		"Item Drop Rate": 2,
-		"ATT": 2,
-		"LUK": 2,
-		"All Stats": 2
+	target_potential_list = {
+		"Item Drop Rate, %": 3,
+		"Critical Damage, %": 2,
+		"ATT, %": 3,
 	}
 	```
-	2. move maple window for calibrating then click anykey in preview window
-	3. click at maple window and wait 3 seconds
+2. run `main.py`
+	```
+	python src/main.py
+	```
+2. move maple window for calibrating then click anykey in preview window
+3. click at maple window and wait 3 seconds
